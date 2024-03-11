@@ -1,0 +1,242 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Maintenance")
+gui.Form1..size(3735,2820)
+gui.Form1..minx(0)
+gui.Form1..miny(0)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.cmdDelete.create(button)
+gui.Form1.cmdDelete.caption("Delete")
+gui.Form1.cmdDelete.visible(True)
+gui.Form1.cmdDelete.size(1230,465)
+gui.Form1.cmdDelete.zorder(0)
+gui.Form1.cmdDelete.position(2010,1500)
+gui.Form1.cmdDelete.enabled(True)
+gui.Form1.cmdDelete.fontname("Arial")
+gui.Form1.cmdDelete.fontsize(8)
+gui.Form1.cmdDelete.event(click,cmddelete_click)
+gui.Form1.cmdDelete.defaultvalue("")
+gui.Form1.cmdDelete.controlgroup(0)
+gui.Form1.cmdSave.create(button)
+gui.Form1.cmdSave.caption("Save")
+gui.Form1.cmdSave.visible(True)
+gui.Form1.cmdSave.size(1230,465)
+gui.Form1.cmdSave.zorder(0)
+gui.Form1.cmdSave.position(300,1500)
+gui.Form1.cmdSave.enabled(True)
+gui.Form1.cmdSave.fontname("Arial")
+gui.Form1.cmdSave.fontsize(8)
+gui.Form1.cmdSave.event(click,cmdsave_click)
+gui.Form1.cmdSave.defaultvalue("")
+gui.Form1.cmdSave.controlgroup(0)
+gui.Form1.txt1.create(textbox,"",True,1695,375,0,300,700,True,0,Arial,8,-2147483643,1)
+gui.Form1.txt1.maxLength(4)
+gui.Form1.txt1.defaultvalue("")
+gui.Form1.txt1.controlgroup(0)
+gui.Form1.lbl1.create(label,"Enter or Browse for  Alpha Characters:",True,2925,255,1,300,360,True,0,Arial,8,-2147483633,0)
+gui.Form1.lbl1.defaultvalue("")
+gui.Form1.lbl1.controlgroup(0)
+gui.Form1.cmdBrowse.create(button)
+gui.Form1.cmdBrowse.caption("^")
+gui.Form1.cmdBrowse.visible(True)
+gui.Form1.cmdBrowse.size(495,375)
+gui.Form1.cmdBrowse.zorder(0)
+gui.Form1.cmdBrowse.position(2210,715)
+gui.Form1.cmdBrowse.enabled(True)
+gui.Form1.cmdBrowse.fontname("Arial")
+gui.Form1.cmdBrowse.fontsize(8)
+gui.Form1.cmdBrowse.event(click,cmdbrowse_click)
+gui.Form1.cmdBrowse.defaultvalue("")
+gui.Form1.cmdBrowse.controlgroup(0)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+'created 8/13/15
+'coded by: WAW
+'This is a maintenance program that allows the user to input alpha characters and updates the custom table GCG_ALPHA_MAINT. The program also allows for the deletion of alpha characters.
+
+'open connection to the database
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+Gui.Form1..Visible(true)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3887_Alpha_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+program.sub.cmdsave_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdsave_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.ssql.Declare(String)
+V.Local.salpha.Declare(String)
+V.Local.ssql2.Declare(String)
+
+V.Local.salpha.Set(V.Screen.Form1!txt1.Text)
+
+'ensure the user entered something in the textbox if not show a message box informing the user of that otherwise update the custom table with the info the user entered
+F.Intrinsic.Control.If(V.Local.salpha,=,"")
+	F.Intrinsic.UI.Msgbox("No Alpha Character Has Been Entered")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Else
+	F.intrinsic.String.Build("SELECT ALPHA FROM GCG_3887_ALPHA_MAINT WHERE ALPHA = '{0}'",V.Local.salpha.Trim,V.Local.ssql2)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rst2",V.Local.ssql2)
+	Function.Intrinsic.Control.If(V.ODBC.con!rst2.EOF,=,True)
+		F.intrinsic.string.build("INSERT INTO GCG_3887_ALPHA_MAINT  (ALPHA) VALUES ('{0}')",V.local.salpha.Trim,V.local.ssql)
+		F.ODBC.Connection!con.OpenlocalrecordsetRO("rst",V.Local.ssql)
+		F.ODBC.Con!rst.Close
+		F.ODBC.con!rst2.Close
+		F.Intrinsic.UI.Msgbox("Upload Complete")
+		Gui.Form1.txt1.Text("")
+			F.Intrinsic.Control.Else
+		F.Intrinsic.UI.Msgbox("That Alpha Character Already Exists")
+		F.ODBC.con!rst2.Close
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdsave_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3887_Alpha_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdsave_click.end
+
+program.sub.cmddelete_click.start
+F.Intrinsic.Control.SetErrorHandler("cmddelete_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.salpha.Declare(String)
+V.Local.ssql.Declare(String)
+
+V.Local.salpha.Set(V.Screen.Form1!txt1.Text)
+
+'if there was nothing put in the textbox throw a message box up informing the user otherwise delete what the user entered in the textbox from the custom table then clear the textbox
+F.Intrinsic.Control.If(V.Local.salpha,=,"")
+	F.Intrinsic.UI.Msgbox("No Alpha Character Has Been Entered")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Else
+	F.intrinsic.string.build("DELETE FROM GCG_3887_ALPHA_MAINT WHERE ALPHA = '{0}'",V.local.salpha.Trim,V.local.ssql)
+	F.ODBC.Connection!con.OpenlocalrecordsetRO("rst",V.Local.ssql)
+	F.ODBC.Con!rst.Close
+	F.Intrinsic.UI.Msgbox("Deletion Complete")
+	Gui.Form1.txt1.Text("")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmddelete_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3887_Alpha_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmddelete_click.end
+
+program.sub.form1_unload.start
+F.Intrinsic.Control.SetErrorHandler("form1_unload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'closes the connection to the database
+F.ODBC.Connection!con.Close
+
+Gui.Form1..Visible(false)
+
+'closes the program
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("form1_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3887_Alpha_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.form1_unload.end
+
+program.sub.cmdbrowse_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdbrowse_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.local.stitles.Declare(String)
+V.Local.iwidths.Declare(Long)
+V.Local.sret.Declare(String)
+
+'set the title and width for the browser
+V.Local.stitles.Set("Alpha Character")
+V.Local.iwidths.Set(5000)
+
+'open the connection to the database and query for the Alpha characters in the custom table
+F.Intrinsic.UI.Browser("Select an Alpha Character","con","Select ALPHA from GCG_3887_ALPHA_MAINT",V.local.stitles,V.local.iwidths,V.Local.sret)
+'makes sure an alpha character is selected and sets the textbox to what the user selected
+F.Intrinsic.Control.If(V.Local.sret,=,"***CANCEL***")
+	F.Intrinsic.UI.Msgbox("No Alpha Characters Were Selected")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.ElseIf(V.local.sret,<>,"***CANCEL***")
+	F.Intrinsic.String.Split(V.Local.sret,"*!*",V.Local.sret)
+	Gui.Form1.txt1.Text(V.Local.sret(0))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdbrowse_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3887_Alpha_Maint.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdbrowse_click.end
+
+Program.Sub.Comments.Start
+${$0$}$GCG_Alpha_Maint$}$WAW$}$8/13/2015
+Program.Sub.Comments.End
+
